@@ -230,7 +230,7 @@
   function startGame() {
     touched = true;
     $('hud').hidden = false;
-    $('court').scrollIntoView({ block: 'center', behavior: 'instant' });
+    $('courtShell').scrollIntoView({ block: 'start', behavior: 'instant' });
     Object.assign(game, { on: true, score: 0, combo: 0, end: performance.now() + GAME_MS });
     $('target').removeAttribute('hidden');
     $('randomShot').hidden = true;
