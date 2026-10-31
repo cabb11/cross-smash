@@ -801,23 +801,38 @@
 
   function applyPhotos(rows) {
     $('moreShots').hidden = !rows.length;
+    $('moreTitle').hidden = !rows.length;
     $('moreShots').replaceChildren(...rows.map(p => {
       const button = node('button', 'shot');
       button.type = 'button';
       const img = node('img');
       img.src = p.image_url;
       img.alt = p.caption || 'Photo from Cross Smash';
-      img.loading = 'lazy';
       button.append(img, node('span', '', p.caption || 'Cross Smash'));
       return button;
     }));
   }
 
-  [
+  const SOURCES = [
     ['site_settings?select=*&id=eq.1', rows => applySettings(rows[0])],
     ['sessions?select=*&order=start_hour', applySessions],
     ['events?select=*&order=starts_at', applyEvents],
     ['announcements?select=*&order=created_at.desc', applyNotices],
     ['photos?select=*&order=created_at.desc', applyPhotos]
-  ].forEach(([path, apply]) => read(path).then(apply).catch(() => { /* keep the built-in content */ }));
+  ];
+  const seen = {};
+
+  // Redraws a section only when its data changed, so open pages stay still between updates.
+  function loadContent() {
+    if (document.hidden || $('viewer').open) return;
+    SOURCES.forEach(([path, apply]) => read(path).then(rows => {
+      const text = JSON.stringify(rows);
+      if (seen[path] === text) return;
+      seen[path] = text;
+      apply(rows);
+    }).catch(() => { /* keep what is on the page */ }));
+  }
+  loadContent();
+  setInterval(loadContent, 60000);
+  document.addEventListener('visibilitychange', loadContent);
 })();

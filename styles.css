@@ -416,7 +416,8 @@ dialog::backdrop { background: var(--deep); }
 .event h3 { font: 800 30px/1.05 var(--display); text-transform: uppercase; overflow-wrap: anywhere; }
 .event p { color: var(--on-dark-soft); white-space: pre-line; overflow-wrap: anywhere; }
 .event .btn { margin-top: 8px; }
-.gallery.more { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); grid-template-rows: none; grid-auto-rows: 200px; }
+.more-title { margin-top: 34px; font: 800 30px/1.1 var(--display); text-transform: uppercase; }
+.gallery.more { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); grid-template-rows: none; grid-auto-rows: 200px; margin-top: 12px; }
 .hours { margin-bottom: 18px; color: var(--on-dark-soft); font-weight: 600; }
 .foot-note a { color: inherit; }
 
