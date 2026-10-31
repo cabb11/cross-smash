@@ -402,6 +402,24 @@ dialog::backdrop { background: var(--deep); }
 .tagline { font: 900 clamp(36px, 7vw, 72px)/1 var(--display); text-transform: uppercase; color: var(--accent); transition: color .3s ease; }
 .foot-note { max-width: 70ch; margin-top: 14px; color: var(--on-dark-soft); font-size: 15px; }
 
+/* Admin-managed content */
+.notices { background: var(--accent); color: var(--deep); }
+.notices .wrap { display: flex; flex-wrap: wrap; gap: 2px 12px; padding-block: 10px; }
+.notices .wrap + .wrap { border-top: 1px solid var(--deep); }
+.notices strong { font-weight: 700; }
+.events-band { background: var(--deep-2); }
+.events { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-top: 26px; }
+.event { display: grid; align-content: start; min-width: 0; background: var(--deep); }
+.event img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; }
+.event-body { display: grid; gap: 6px; justify-items: start; padding: 18px; }
+.event time { color: var(--accent); font-weight: 700; }
+.event h3 { font: 800 30px/1.05 var(--display); text-transform: uppercase; overflow-wrap: anywhere; }
+.event p { color: var(--on-dark-soft); white-space: pre-line; overflow-wrap: anywhere; }
+.event .btn { margin-top: 8px; }
+.gallery.more { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); grid-template-rows: none; grid-auto-rows: 200px; }
+.hours { margin-bottom: 18px; color: var(--on-dark-soft); font-weight: 600; }
+.foot-note a { color: inherit; }
+
 .dock { display: none; }
 
 @supports (animation-timeline: view()) {
@@ -444,7 +462,8 @@ dialog::backdrop { background: var(--deep); }
   .switch button { flex: 1; }
   .lab-controls { width: 100%; }
   .icon-btn { width: 100%; }
-  .gallery { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
+  .gallery:not(.more) { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
+  .gallery.more { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 150px; }
   .gallery .shot { aspect-ratio: 4 / 3; max-width: 100%; }
   .shot.big { grid-row: auto; }
   .live { grid-template-columns: auto minmax(0, 1fr); }

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Cross Smash Admin</title>
+<link rel="icon" href="../images/logo.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&display=swap">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<main class="login" id="loginView" hidden>
+  <form class="login-card" id="loginForm">
+    <img src="../images/logo.jpg" alt="" width="72" height="72">
+    <h1>Cross Smash Admin</h1>
+    <label for="email">Email</label>
+    <input id="email" type="email" autocomplete="username" required>
+    <label for="password">Password</label>
+    <input id="password" type="password" autocomplete="current-password" required>
+    <button type="submit" class="primary" id="loginBtn">Sign in</button>
+    <p class="error" id="loginError" role="alert" hidden></p>
+    <a href="../">Back to website</a>
+  </form>
+</main>
+
+<div class="app" id="appView" hidden>
+  <header class="bar">
+    <a class="brand" href="../" target="_blank" rel="noopener"><img src="../images/logo.jpg" alt="" width="40" height="40">View website</a>
+    <span class="who" id="who"></span>
+    <button type="button" id="signOut">Sign out</button>
+  </header>
+  <nav class="tabs" id="tabs" aria-label="Sections"></nav>
+  <main class="panel" id="panel"></main>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script src="../config.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>

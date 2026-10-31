@@ -4,6 +4,7 @@
   const $ = id => document.getElementById(id);
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const peso = n => '₱' + n.toLocaleString('en-PH');
+  const esc = text => String(text).replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
   const store = {
     get(key, fallback) { try { return localStorage.getItem(key) ?? fallback; } catch { return fallback; } },
     set(key, value) { try { localStorage.setItem(key, value); } catch { /* private window */ } }
@@ -350,15 +351,19 @@
     return `${label} ${hour < 12 ? 'AM' : 'PM'}`;
   };
 
+  // Replaced by the admin-managed schedule once it loads.
+  let schedule = null;
+
   // Late night has only appeared on weekend listings, and ball machine drills on Tuesdays.
   function sessionsOn(ms) {
     const day = new Date(ms).getUTCDay();
+    if (schedule) return schedule.filter(s => s.days.includes(day));
     const list = [
       { id: 'morning', name: 'Morning', start: 8, end: 13, price: 120 },
       { id: 'afternoon', name: 'Afternoon', start: 13, end: 18, price: 150 },
       { id: 'evening', name: 'Evening', start: 18, end: 23, price: 250 }
     ];
-    if (day === 2) list.splice(1, 0, { id: 'drills', name: 'Ball machine drills', start: 8, end: 13, price: 300 });
+    if (day === 2) list.splice(1, 0, { id: 'drills', name: 'Ball machine drills', start: 8, end: 13, price: 300, special: true });
     if (day === 6 || day === 0) list.push({ id: 'late', name: 'Late night', start: 23, end: 27, price: 200 });
     return list;
   }
@@ -376,10 +381,16 @@
   }
 
   function drawSessions() {
-    $('sessions').innerHTML = sessionsOn(openDay).map(s => `
+    const rows = sessionsOn(openDay);
+    if (!rows.length) {
+      $('sessions').innerHTML = '<p class="fine">No open play listed for this day.</p>';
+      tick();
+      return;
+    }
+    $('sessions').innerHTML = rows.map(s => `
       <article class="session" data-id="${s.id}">
         <span class="fill"></span>
-        <h3>${s.name}</h3>
+        <h3>${esc(s.name)}</h3>
         <span class="time">${sessionTime(s)}</span>
         <span class="price">${peso(s.price)}</span>
         <span class="flag"></span>
@@ -414,7 +425,7 @@
     const base = today();
     const h = hourNow();
     const pool = [-1, 0, 1, 2].flatMap(offset => sessionsOn(base + offset * DAY_MS)
-      .filter(s => s.id !== 'drills')
+      .filter(s => !s.special)
       .map(s => ({ ...s, day: base + offset * DAY_MS, from: offset * 24 + s.start, to: offset * 24 + s.end })));
     const on = pool.find(s => h >= s.from && h < s.to);
     const next = pool.filter(s => s.from > h).sort((a, b) => a.from - b.from)[0];
@@ -423,11 +434,12 @@
 
   function tick() {
     const { h, on, next } = liveState();
+    $('live').hidden = !on && !next;
     if (on) {
       $('liveName').textContent = `${on.name} open play`;
       $('liveDetail').textContent = 'is the usual session right now. Time left:';
       $('liveClock').textContent = hms(on.to - h);
-    } else {
+    } else if (next) {
       $('liveName').textContent = `${next.name} open play`;
       $('liveDetail').textContent = 'is the next usual session. Starts in:';
       $('liveClock').textContent = hms(next.from - h);
@@ -448,7 +460,7 @@
 
   /* ---------- Planner ---------- */
   const COURTS = { pickleball: 6, badminton: 7 };
-  const PRICE = { pickleball: 500, badminton: 250 };
+  const RATES = { pickleball: 500, badminton: 250, paddle: 100, racket: 50, machine: 500 };
   const plan = {
     mode: 'court', date: today() + DAY_MS, start: 18, hours: 2, courts: [1], players: 4,
     gear: 0, machine: 0, session: 'evening', openPlayers: 1, openGear: 0
@@ -490,12 +502,12 @@
     const dateStep = `<div class="step"><h3><span>1</span> Choose a date</h3><div class="chips">${dateChips()}</div></div>`;
     if (plan.mode === 'open') {
       const chips = sessionsOn(plan.date).map(s =>
-        `<button type="button" id="pick-${s.id}" data-session="${s.id}" aria-pressed="${plan.session === s.id}">${s.name}, ${peso(s.price)}</button>`).join('');
+        `<button type="button" id="pick-${s.id}" data-session="${s.id}" aria-pressed="${plan.session === s.id}">${esc(s.name)}, ${peso(s.price)}</button>`).join('') || '<p>No open play listed for this day. Choose another date.</p>';
       return dateStep
         + `<div class="step"><h3><span>2</span> Pick a session</h3><div class="chips">${chips}</div></div>`
         + `<div class="step"><h3><span>3</span> Who's coming</h3>`
         + stepper('openPlayers', 'Players', '', ...l.openPlayers)
-        + stepper('openGear', 'Paddles to rent', '₱100 each', ...l.openGear)
+        + stepper('openGear', 'Paddles to rent', `${peso(RATES.paddle)} each`, ...l.openGear)
         + '</div>';
     }
     const isP = sport === 'pickleball';
@@ -505,8 +517,8 @@
     const courtChips = Array.from({ length: COURTS[sport] }, (_, i) => i + 1).map(n =>
       `<button type="button" id="court-${n}" data-court="${n}" aria-pressed="${plan.courts.includes(n)}">Court ${n}${isP && n <= 5 ? '<small>Instant Replay</small>' : ''}</button>`).join('');
     return `<div class="step"><h3><span>1</span> Pick a sport</h3><div class="chips">
-        <button type="button" id="pick-pickleball" data-pick="pickleball" aria-pressed="${isP}">Pickleball, ₱500/hr</button>
-        <button type="button" id="pick-badminton" data-pick="badminton" aria-pressed="${!isP}">Badminton, ₱250/hr</button>
+        <button type="button" id="pick-pickleball" data-pick="pickleball" aria-pressed="${isP}">Pickleball, ${peso(RATES.pickleball)}/hr</button>
+        <button type="button" id="pick-badminton" data-pick="badminton" aria-pressed="${!isP}">Badminton, ${peso(RATES.badminton)}/hr</button>
       </div></div>`
       + dateStep.replace('<span>1</span>', '<span>2</span>')
       + `<div class="step"><h3><span>3</span> Set your start time</h3><div class="chips">${times}</div>`
@@ -514,16 +526,17 @@
       + `<div class="step"><h3><span>4</span> Choose your courts</h3><div class="chips courts-pick">${courtChips}</div></div>`
       + `<div class="step"><h3><span>5</span> Add your group and rentals</h3>`
       + stepper('players', 'Players sharing the cost', '', ...l.players)
-      + stepper('gear', isP ? 'Paddles to rent' : 'Rackets to rent', isP ? '₱100 each' : '₱50 each', ...l.gear)
-      + (isP ? stepper('machine', 'Ball machine hours', '₱500 an hour', ...l.machine) : '')
+      + stepper('gear', isP ? 'Paddles to rent' : 'Rackets to rent', `${peso(isP ? RATES.paddle : RATES.racket)} each`, ...l.gear)
+      + (isP ? stepper('machine', 'Ball machine hours', `${peso(RATES.machine)} an hour`, ...l.machine) : '')
       + '</div>';
   }
 
   function bill() {
     if (plan.mode === 'open') {
       const s = sessionsOn(plan.date).find(x => x.id === plan.session);
+      if (!s) return { title: 'No open play this day', when: dayName(plan.date), rows: [], split: 1, start: 8, end: 9, summary: 'Open play at Cross Smash' };
       const rows = [[`${plan.openPlayers} × ${s.name.toLowerCase()} session`, plan.openPlayers * s.price]];
-      if (plan.openGear) rows.push([`${plan.openGear} × paddle`, plan.openGear * 100]);
+      if (plan.openGear) rows.push([`${plan.openGear} × paddle`, plan.openGear * RATES.paddle]);
       const when = `${dayName(plan.date)}, ${sessionTime(s)}`;
       return { title: `${s.name} open play`, when, rows, split: plan.openPlayers, start: s.start, end: s.end, summary: `${s.name} open play at Cross Smash, ${when}` };
     }
@@ -532,9 +545,9 @@
     const n = plan.courts.length;
     const nums = [...plan.courts].sort((a, b) => a - b).join(', ');
     const courtWord = n > 1 ? 'Courts' : 'Court';
-    const rows = [[`${n} ${n > 1 ? 'courts' : 'court'} × ${plan.hours} hr`, n * plan.hours * PRICE[sport]]];
-    if (plan.gear) rows.push([`${plan.gear} × ${isP ? 'paddle' : 'racket'}`, plan.gear * (isP ? 100 : 50)]);
-    if (isP && plan.machine) rows.push([`Ball machine × ${plan.machine} hr`, plan.machine * 500]);
+    const rows = [[`${n} ${n > 1 ? 'courts' : 'court'} × ${plan.hours} hr`, n * plan.hours * RATES[sport]]];
+    if (plan.gear) rows.push([`${plan.gear} × ${isP ? 'paddle' : 'racket'}`, plan.gear * (isP ? RATES.paddle : RATES.racket)]);
+    if (isP && plan.machine) rows.push([`Ball machine × ${plan.machine} hr`, plan.machine * RATES.machine]);
     const end = plan.start + plan.hours;
     const when = `${dayName(plan.date)}, ${clock(plan.start)} to ${clock(end)}`;
     return { title: `${label}, ${courtWord} ${nums}`, when, rows, split: plan.players, start: plan.start, end, summary: `${label} at Cross Smash, ${courtWord} ${nums}, ${when}` };
@@ -565,7 +578,7 @@
     Object.keys(l).forEach(k => { plan[k] = Math.min(Math.max(plan[k], l[k][0]), l[k][1]); });
     if (sport === 'badminton') plan.machine = 0;
     const list = sessionsOn(plan.date);
-    if (!list.some(s => s.id === plan.session)) plan.session = list[0].id;
+    if (!list.some(s => s.id === plan.session)) plan.session = list[0]?.id;
     if (plan.date === today() && plan.start <= hourNow()) plan.start = Math.min(22, Math.ceil(hourNow()) + 1);
 
     $('fields').innerHTML = fieldsHtml();
@@ -646,19 +659,22 @@
   });
 
   /* ---------- Gallery viewer ---------- */
-  const shots = [...document.querySelectorAll('.shot')];
+  const allShots = () => [...document.querySelectorAll('.shot')];
   let viewing = 0;
   function showPhoto(i) {
+    const shots = allShots();
     viewing = (i + shots.length) % shots.length;
     const img = shots[viewing].querySelector('img');
     $('viewImg').src = img.getAttribute('src');
     $('viewImg').alt = img.alt;
     $('viewCap').textContent = shots[viewing].querySelector('span').textContent;
   }
-  shots.forEach(s => s.addEventListener('click', () => {
-    showPhoto(Number(s.dataset.index));
+  document.addEventListener('click', e => {
+    const shot = e.target.closest('.shot');
+    if (!shot) return;
+    showPhoto(allShots().indexOf(shot));
     $('viewer').showModal();
-  }));
+  });
   $('viewClose').addEventListener('click', () => $('viewer').close());
   $('viewPrev').addEventListener('click', () => showPhoto(viewing - 1));
   $('viewNext').addEventListener('click', () => showPhoto(viewing + 1));
@@ -689,7 +705,7 @@
       navLinks.forEach(a => a.classList.toggle('on', a.hash === '#' + entry.target.id));
     });
   }, { rootMargin: '-45% 0px -50% 0px' });
-  ['court-lab', 'open-play', 'book', 'inside', 'visit', 'faq'].forEach(id => spy.observe($(id)));
+  ['court-lab', 'open-play', 'events', 'book', 'inside', 'visit', 'faq'].forEach(id => spy.observe($(id)));
 
   /* ---------- First frame ---------- */
   paintLines();
@@ -698,4 +714,110 @@
   drawDays();
   drawSessions();
   drawPlanner();
+
+  /* ---------- Admin-managed content: the page above stays complete if this cannot load ---------- */
+  const safeLink = url => (/^https?:\/\//i.test(url || '') ? url : '');
+  const node = (tag, className, text) => {
+    const n = document.createElement(tag);
+    if (className) n.className = className;
+    if (text) n.textContent = text;
+    return n;
+  };
+  const stillOn = iso => !iso || new Date(iso) > new Date();
+  const eventTime = iso => new Date(iso).toLocaleString('en-PH', {
+    timeZone: 'Asia/Manila', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+  });
+
+  async function read(path) {
+    const { url, key } = window.CROSS_SMASH_DB;
+    const res = await fetch(`${url}/rest/v1/${path}`, { headers: { apikey: key } });
+    if (!res.ok) throw new Error(path);
+    return res.json();
+  }
+
+  function applySettings(s) {
+    if (!s) return;
+    const map = { pickleball: 'pickleball_rate', badminton: 'badminton_rate', paddle: 'paddle_rate', racket: 'racket_rate', machine: 'machine_rate' };
+    Object.entries(map).forEach(([key, column]) => { RATES[key] = s[column]; });
+    document.querySelectorAll('[data-rate]').forEach(n => { n.textContent = peso(RATES[n.dataset.rate]); });
+    if (s.address) $('address').textContent = s.address;
+    if (s.phone) {
+      $('phoneLink').textContent = s.phone;
+      $('phoneLink').href = 'tel:' + s.phone.replace(/[^\d+]/g, '');
+    }
+    if (safeLink(s.facebook_url)) $('fbLink').href = s.facebook_url;
+    $('hoursNote').textContent = s.hours_note || '';
+    $('hoursNote').hidden = !s.hours_note;
+    drawPlanner();
+  }
+
+  function applySessions(rows) {
+    if (!rows.length) return;
+    schedule = rows.map(r => ({ id: r.id, name: r.name, start: r.start_hour, end: r.end_hour, price: r.price, days: r.days, special: r.is_special }));
+    const regular = schedule.filter(s => !s.special);
+    if (regular.length) $('fromPrice').textContent = peso(Math.min(...regular.map(s => s.price)));
+    drawSessions();
+    drawPlanner();
+  }
+
+  function applyEvents(rows) {
+    const upcoming = rows.filter(e => stillOn(e.ends_at || e.starts_at));
+    $('events').hidden = !upcoming.length;
+    $('navEvents').hidden = !upcoming.length;
+    $('eventList').replaceChildren(...upcoming.map(e => {
+      const card = node('article', 'event');
+      if (e.image_url) {
+        const img = node('img');
+        img.src = e.image_url;
+        img.alt = '';
+        img.loading = 'lazy';
+        card.append(img);
+      }
+      const body = node('div', 'event-body');
+      body.append(node('time', '', eventTime(e.starts_at)), node('h3', '', e.title));
+      if (e.description) body.append(node('p', '', e.description));
+      if (safeLink(e.link_url)) {
+        const a = node('a', 'btn ghost', 'Learn more');
+        a.href = e.link_url;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        body.append(a);
+      }
+      card.append(body);
+      return card;
+    }));
+  }
+
+  function applyNotices(rows) {
+    const live = rows.filter(n => stillOn(n.expires_at));
+    $('notices').hidden = !live.length;
+    $('notices').replaceChildren(...live.map(n => {
+      const row = node('div', 'wrap');
+      row.append(node('strong', '', n.title));
+      if (n.body) row.append(node('span', '', n.body));
+      return row;
+    }));
+  }
+
+  function applyPhotos(rows) {
+    $('moreShots').hidden = !rows.length;
+    $('moreShots').replaceChildren(...rows.map(p => {
+      const button = node('button', 'shot');
+      button.type = 'button';
+      const img = node('img');
+      img.src = p.image_url;
+      img.alt = p.caption || 'Photo from Cross Smash';
+      img.loading = 'lazy';
+      button.append(img, node('span', '', p.caption || 'Cross Smash'));
+      return button;
+    }));
+  }
+
+  [
+    ['site_settings?select=*&id=eq.1', rows => applySettings(rows[0])],
+    ['sessions?select=*&order=start_hour', applySessions],
+    ['events?select=*&order=starts_at', applyEvents],
+    ['announcements?select=*&order=created_at.desc', applyNotices],
+    ['photos?select=*&order=created_at.desc', applyPhotos]
+  ].forEach(([path, apply]) => read(path).then(apply).catch(() => { /* keep the built-in content */ }));
 })();

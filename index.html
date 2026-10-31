@@ -39,6 +39,7 @@
     <nav aria-label="Main">
       <a href="#court-lab">Play</a>
       <a href="#open-play">Open play</a>
+      <a href="#events" id="navEvents" hidden>Events</a>
       <a href="#book">Book</a>
       <a href="#inside">Inside</a>
       <a href="#faq">FAQ</a>
@@ -48,16 +49,18 @@
   <span class="progress" id="progress"></span>
 </header>
 
+<aside class="notices" id="notices" aria-label="Announcements" hidden></aside>
+
 <main id="top">
   <section class="hero">
     <div class="panels" role="group" aria-label="Choose your sport">
       <button type="button" class="panel" id="panelPickle" data-sport="pickleball" aria-pressed="true">
         <img src="images/pickleball-hall.jpg" alt="Purple pickleball courts in a row inside the Cross Smash warehouse" width="896" height="1195" fetchpriority="high">
-        <span class="panel-label"><b>Pickleball</b><span>6 courts, ₱500/hr</span></span>
+        <span class="panel-label"><b>Pickleball</b><span>6 courts, <span data-rate="pickleball">₱500</span>/hr</span></span>
       </button>
       <button type="button" class="panel" id="panelBad" data-sport="badminton" aria-pressed="false">
         <img src="images/badminton-hall.jpg" alt="Badminton courts with yellow net posts on a purple floor under bright hall lights" width="1600" height="1080">
-        <span class="panel-label"><b>Badminton</b><span>7 courts, ₱250/hr</span></span>
+        <span class="panel-label"><b>Badminton</b><span>7 courts, <span data-rate="badminton">₱250</span>/hr</span></span>
       </button>
     </div>
     <div class="hero-copy">
@@ -75,7 +78,7 @@
   <section class="facts-band">
     <div class="wrap facts">
       <div><b>13</b><span>indoor courts</span></div>
-      <div><b>₱120</b><span>open play starts here</span></div>
+      <div><b id="fromPrice">₱120</b><span>open play starts here</span></div>
       <div><b>5,600+</b><span>players on Reclub</span></div>
       <div><b>4.6 / 5</b><span>from 14 Google reviews</span></div>
     </div>
@@ -153,6 +156,13 @@
     </div>
   </section>
 
+  <section class="band events-band" id="events" hidden>
+    <div class="wrap">
+      <h2>What's coming up</h2>
+      <div class="events" id="eventList"></div>
+    </div>
+  </section>
+
   <section class="band paper" id="book">
     <div class="wrap">
       <h2>Plan your game</h2>
@@ -196,6 +206,8 @@
         <button type="button" class="shot" id="photo2" data-index="2"><img src="images/court-mural.jpg" alt="Single pickleball court beside a colorful mural wall" width="896" height="1195" loading="lazy"><span>The mural court</span></button>
       </div>
 
+      <div class="gallery more" id="moreShots" hidden></div>
+
       <ul class="amen">
         <li>Free Wi-Fi</li>
         <li>Shower rooms</li>
@@ -213,12 +225,13 @@
     <div class="wrap venue-grid">
       <div>
         <h2>Find us in Parian</h2>
-        <address class="addr">Warehouse 9 &amp; 10, Denson Realty Corp, Parian, Calamba City, Laguna 4027</address>
+        <address class="addr" id="address">Warehouse 9 &amp; 10, Denson Realty Corp, Parian, Calamba City, Laguna 4027</address>
+        <p class="hours" id="hoursNote" hidden></p>
         <div class="btn-row">
           <a class="btn" href="https://www.google.com/maps/search/?api=1&amp;query=6553%2BJP%20Calamba%20Laguna" target="_blank" rel="noopener">Google Maps</a>
           <a class="btn ghost" href="https://waze.com/ul?ll=14.2090239,121.1543164&amp;navigate=yes" target="_blank" rel="noopener">Waze</a>
         </div>
-        <p class="contact">Questions or events: message us on <a href="https://www.facebook.com/share/14ZNdzcMT8A/?mibextid=wwXIfr" target="_blank" rel="noopener">Facebook</a> or call <a href="tel:+639088663295">0908 866 3295</a>.</p>
+        <p class="contact">Questions or events: message us on <a id="fbLink" href="https://www.facebook.com/share/14ZNdzcMT8A/?mibextid=wwXIfr" target="_blank" rel="noopener">Facebook</a> or call <a id="phoneLink" href="tel:+639088663295">0908 866 3295</a>.</p>
       </div>
       <iframe class="map" title="Map to Cross Smash in Parian, Calamba" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=14.2090239,121.1543164&amp;z=16&amp;output=embed"></iframe>
     </div>
@@ -244,7 +257,7 @@
         </details>
         <details>
           <summary>How much is paddle or racket rental?</summary>
-          <p>A pickleball paddle is ₱100 and a badminton racket is ₱50. The ball machine is ₱500 an hour.</p>
+          <p>A pickleball paddle is <span data-rate="paddle">₱100</span> and a badminton racket is <span data-rate="racket">₱50</span>. The ball machine is <span data-rate="machine">₱500</span> an hour.</p>
         </details>
         <details>
           <summary>What does Instant Replay mean on the booking page?</summary>
@@ -263,7 +276,7 @@
 <footer class="foot">
   <div class="wrap">
     <p class="tagline">Play. Compete. Have fun. Repeat!</p>
-    <p class="foot-note">Practice website using Cross Smash details and photos from public listings. Schedule and prices can change, so check the booking pages for the latest.</p>
+    <p class="foot-note">Practice website using Cross Smash details and photos from public listings. Schedule and prices can change, so check the booking pages for the latest. <a href="admin/">Admin</a></p>
   </div>
 </footer>
 
@@ -280,6 +293,7 @@
   <p id="viewCap"></p>
 </dialog>
 
+<script src="config.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
