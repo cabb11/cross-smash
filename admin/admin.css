@@ -91,7 +91,9 @@ button.danger.armed { background: var(--danger); color: var(--line); }
 .check { display: flex; align-items: center; gap: 10px; }
 .days { display: flex; flex-wrap: wrap; gap: 6px 14px; }
 .days label { display: flex; align-items: center; gap: 6px; font-weight: 500; }
-.preview { max-height: 180px; object-fit: contain; }
+.previews { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 6px; }
+.preview { width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--paper-edge); }
+.previews:has(.preview:only-child) { grid-template-columns: minmax(0, 200px); }
 .form-tools { display: flex; flex-wrap: wrap; gap: 8px; }
 .settings { max-width: 640px; margin-top: 18px; }
 

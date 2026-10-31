@@ -3,6 +3,7 @@
   const db = supabase.createClient(window.CROSS_SMASH_DB.url, window.CROSS_SMASH_DB.key);
   const BUCKET = 'media';
   const WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const MAX_BATCH = 20;
 
   function el(tag, props = {}, ...kids) {
     const node = document.createElement(tag);
@@ -72,22 +73,23 @@
       return wrap(el('select', { id, required: true }, ...Array.from({ length: 24 }, (_, h) => el('option', { value: h, textContent: clock(h), selected: h === shown }))), f.hint);
     }
     if (f.type === 'image') {
-      const preview = el('img', { class: 'preview', alt: '', src: row?.image_url || 'data:,', hidden: !row?.image_url });
+      const previews = el('div', { class: 'previews' }, row?.image_url ? el('img', { class: 'preview', alt: '', src: row.image_url }) : null);
+      const many = Boolean(f.multiple && !row);
       const input = el('input', {
-        id, type: 'file', accept: 'image/jpeg,image/png,image/webp', required: Boolean(f.required && !row),
+        id, type: 'file', accept: 'image/jpeg,image/png,image/webp', required: Boolean(f.required && !row), multiple: many,
         onchange: () => {
-          if (!input.files[0]) return;
-          preview.src = URL.createObjectURL(input.files[0]);
-          preview.hidden = false;
+          if (!input.files.length) return;
+          previews.replaceChildren(...[...input.files].map(file => el('img', { class: 'preview', alt: '', src: URL.createObjectURL(file) })));
         }
       });
-      return el('div', { class: 'field' }, el('label', { htmlFor: id, textContent: f.label + (f.required ? ' *' : '') }), preview, input, f.hint ? el('small', { textContent: f.hint }) : null);
+      const label = (row && f.editLabel) || f.label;
+      return el('div', { class: 'field' }, el('label', { htmlFor: id, textContent: label + (f.required && !row ? ' *' : '') }), previews, input, many && f.hint ? el('small', { textContent: f.hint }) : null);
     }
     if (f.type === 'textarea') {
       return wrap(el('textarea', { id, value: value ?? '', required: Boolean(f.required) }), f.hint);
     }
     const shownValue = f.type === 'datetime-local' ? toInput(value) : value ?? '';
-    return wrap(el('input', { id, type: f.type || 'text', value: shownValue, required: Boolean(f.required), min: f.type === 'number' ? 0 : '' }), f.hint);
+    return wrap(el('input', { id, type: f.type || 'text', value: shownValue, required: Boolean(f.required), min: f.type === 'number' ? 0 : '' }), row && f.newOnly ? null : f.hint);
   }
 
   function readFields(fields) {
@@ -144,8 +146,8 @@
       detail: r => 'Added ' + showTime(r.created_at),
       thumb: true,
       fields: [
-        { key: 'image', label: 'Photo', type: 'image', required: true, hint: 'JPG, PNG or WebP. Large photos are resized automatically.' },
-        { key: 'caption', label: 'Caption' }
+        { key: 'image', label: 'Photos', editLabel: 'Replace photo', type: 'image', required: true, multiple: true, hint: `Choose up to ${MAX_BATCH} JPG, PNG or WebP photos. Large photos are resized automatically.` },
+        { key: 'caption', label: 'Caption', hint: 'Used for every photo in this upload.', newOnly: true }
       ]
     },
     sessions: {
@@ -246,6 +248,27 @@
       el('div', { class: 'split' }, el('div', { class: 'items' }, ...items), buildEditor(s, editing)));
   }
 
+  // One failed photo should not cost the rest of the batch.
+  async function addMany(s, values, files, save) {
+    const failed = [];
+    for (const [i, file] of files.entries()) {
+      save.textContent = `Uploading ${i + 1} of ${files.length}…`;
+      let added = null;
+      try {
+        added = await uploadImage(file, s.folder);
+        const res = await db.from(s.table).insert({ ...values, image_url: added.url, image_path: added.path });
+        if (res.error) throw res.error;
+      } catch {
+        if (added) await removeImage(added.path);
+        failed.push(file.name);
+      }
+    }
+    const saved = files.length - failed.length;
+    if (failed.length) toast(`Added ${saved} of ${files.length} photos. Could not upload: ${failed.join(', ')}`, true);
+    else toast(`Added ${saved} photos. The website is updated.`);
+    drawList();
+  }
+
   function buildEditor(s, row) {
     const save = el('button', { type: 'submit', class: 'primary', textContent: row ? 'Save changes' : `Add ${s.one}` });
     const form = el('form', {
@@ -256,11 +279,14 @@
         s.before?.(values);
         const problem = s.check?.(values);
         if (problem) { toast(problem, true); return; }
+        const files = s.fields.some(f => f.type === 'image') ? [...$('f-image').files] : [];
+        if (files.length > MAX_BATCH) { toast(`Choose up to ${MAX_BATCH} photos at a time.`, true); return; }
         save.disabled = true;
+        if (files.length > 1) { await addMany(s, values, files, save); return; }
         save.textContent = 'Saving…';
         let added = null;
         try {
-          const file = s.fields.some(f => f.type === 'image') ? $('f-image').files[0] : null;
+          const file = files[0];
           if (file) {
             added = await uploadImage(file, s.folder);
             values.image_url = added.url;
