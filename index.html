@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en" data-sport="pickleball">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cross Smash Pickleball &amp; Badminton | Calamba</title>
+<meta name="description" content="Thirteen indoor pickleball and badminton courts in Parian, Calamba City. Book a court from ₱250 an hour or join open play from ₱120.">
+<meta property="og:title" content="Cross Smash Pickleball &amp; Badminton">
+<meta property="og:image" content="images/pickleball-hall.jpg">
+<link rel="icon" href="images/logo.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&display=swap">
+<link rel="stylesheet" href="styles.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SportsActivityLocation",
+  "name": "Cross Smash Pickleball and Badminton",
+  "image": "images/pickleball-hall.jpg",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Warehouse 9 & 10, Denson Realty Corp, Parian",
+    "addressLocality": "Calamba",
+    "addressRegion": "Laguna",
+    "postalCode": "4027",
+    "addressCountry": "PH"
+  },
+  "geo": { "@type": "GeoCoordinates", "latitude": 14.2090239, "longitude": 121.1543164 },
+  "url": "https://book.insta-courts.com/venues/cross-smash"
+}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="mark" href="#top"><img src="images/logo.jpg" alt="" width="44" height="44">Cross Smash</a>
+    <nav aria-label="Main">
+      <a href="#court-lab">Play</a>
+      <a href="#open-play">Open play</a>
+      <a href="#book">Book</a>
+      <a href="#inside">Inside</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a class="btn" href="#book">Plan a game</a>
+  </div>
+  <span class="progress" id="progress"></span>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="panels" role="group" aria-label="Choose your sport">
+      <button type="button" class="panel" id="panelPickle" data-sport="pickleball" aria-pressed="true">
+        <img src="images/pickleball-hall.jpg" alt="Purple pickleball courts in a row inside the Cross Smash warehouse" width="896" height="1195" fetchpriority="high">
+        <span class="panel-label"><b>Pickleball</b><span>6 courts, ₱500/hr</span></span>
+      </button>
+      <button type="button" class="panel" id="panelBad" data-sport="badminton" aria-pressed="false">
+        <img src="images/badminton-hall.jpg" alt="Badminton courts with yellow net posts on a purple floor under bright hall lights" width="1600" height="1080">
+        <span class="panel-label"><b>Badminton</b><span>7 courts, ₱250/hr</span></span>
+      </button>
+    </div>
+    <div class="hero-copy">
+      <div class="wrap">
+        <h1>Cross <em>Smash</em></h1>
+        <p>Thirteen indoor courts in Parian, Calamba. Rain or shine, there's a game here.</p>
+        <div class="btn-row">
+          <a class="btn" href="#book">Plan your game</a>
+          <a class="btn ghost" href="#open-play">Join open play</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="facts-band">
+    <div class="wrap facts">
+      <div><b>13</b><span>indoor courts</span></div>
+      <div><b>₱120</b><span>open play starts here</span></div>
+      <div><b>5,600+</b><span>players on Reclub</span></div>
+      <div><b>4.6 / 5</b><span>from 14 Google reviews</span></div>
+    </div>
+  </section>
+
+  <section class="band lab" id="court-lab">
+    <div class="wrap">
+      <div class="lab-head">
+        <div>
+          <h2>Get on the court</h2>
+          <p class="lede" id="labLede">Move across the court to learn each zone, then tap to land a shot.</p>
+        </div>
+        <div class="lab-controls">
+          <div class="switch" role="group" aria-label="Sport">
+            <button type="button" id="labPickle" data-sport="pickleball" aria-pressed="true">Pickleball</button>
+            <button type="button" id="labBad" data-sport="badminton" aria-pressed="false">Badminton</button>
+          </div>
+          <button type="button" class="icon-btn" id="soundBtn" aria-pressed="false">Sound off</button>
+        </div>
+      </div>
+
+      <div class="court-shell" id="courtShell">
+        <div class="hud" id="hud" hidden>
+          <div><span>Time</span><b id="hudTime">20.0</b></div>
+          <div><span>Score</span><b id="hudScore">0</b></div>
+          <div><span>Combo</span><b id="hudCombo">0</b></div>
+          <div><span>Best</span><b id="hudBest">0</b></div>
+        </div>
+        <svg id="court" viewBox="0 0 1000 520" role="img" aria-label="Top-down court. Tap anywhere to land a shot and see what that part of the court means.">
+          <rect class="surround" width="1000" height="520"></rect>
+          <rect class="inbounds" x="60" y="60" width="880" height="400"></rect>
+          <rect class="kitchen" id="kitchen" x="360" y="60" width="280" height="400"></rect>
+          <g id="highlight"></g>
+          <g id="courtLines"></g>
+          <line class="net-post" x1="500" y1="36" x2="500" y2="484"></line>
+          <line class="net" x1="500" y1="36" x2="500" y2="484"></line>
+          <g id="target" hidden>
+            <circle class="ring" id="targetOuter" r="50"></circle>
+            <circle class="bull" id="targetInner" r="20"></circle>
+          </g>
+          <circle id="ripple" r="10" cx="0" cy="0"></circle>
+          <ellipse id="shadow" rx="13" ry="7"></ellipse>
+          <g id="shot"><circle id="ball" r="14"></circle></g>
+          <g id="floats"></g>
+        </svg>
+        <div class="readout">
+          <div aria-live="polite">
+            <strong id="zoneName">Kitchen</strong>
+            <p id="zoneText"></p>
+          </div>
+          <div class="btn-row">
+            <button type="button" id="randomShot" class="btn solid">Hit a shot</button>
+            <button type="button" id="gameBtn" class="btn hot">Start Smash Challenge</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band floor" id="open-play">
+    <div class="wrap">
+      <h2>No group? Join open play.</h2>
+      <p class="lede">Drop in solo, pay per player, and get matched into games with the regulars. All levels are welcome.</p>
+
+      <div class="live" id="live">
+        <span class="dot" aria-hidden="true"></span>
+        <p><b id="liveName"></b> <span id="liveDetail"></span></p>
+        <time id="liveClock"></time>
+      </div>
+
+      <div class="days" id="days" role="group" aria-label="Choose a day"></div>
+      <div class="sessions" id="sessions"></div>
+
+      <p class="fine">This is the usual schedule from recent listings, shown in Manila time. Slots fill up, and open play has no cancellations, refunds or rescheduling. Always check the session page before you go.</p>
+    </div>
+  </section>
+
+  <section class="band paper" id="book">
+    <div class="wrap">
+      <h2>Plan your game</h2>
+      <p class="lede">Choose your details and see the cost right away. You'll confirm the slot and pay on the booking site.</p>
+
+      <div class="planner">
+        <div class="steps" id="steps">
+          <div class="switch mode" role="group" aria-label="How you are playing">
+            <button type="button" id="modeCourt" data-mode="court" aria-pressed="true">Rent a court</button>
+            <button type="button" id="modeOpen" data-mode="open" aria-pressed="false">Join open play</button>
+          </div>
+          <div id="fields"></div>
+        </div>
+
+        <aside class="sheet" id="sheet" aria-live="polite">
+          <h3 id="sheetTitle"></h3>
+          <p class="when" id="sheetWhen"></p>
+          <ul id="lines"></ul>
+          <div class="total"><span>Estimated total</span><b id="total"></b></div>
+          <p id="each"></p>
+          <a class="btn wide" id="sheetBook" target="_blank" rel="noopener" href="https://book.insta-courts.com/venues/cross-smash">Book on InstaCourts</a>
+          <div class="btn-row sheet-tools">
+            <button type="button" class="btn ghost" id="copyPlan">Copy for group chat</button>
+            <button type="button" class="btn ghost" id="addCal">Add to calendar</button>
+          </div>
+          <textarea id="copyFallback" hidden readonly aria-label="Plan text to copy"></textarea>
+          <p class="note">This is an estimate. Check live availability and the final price on the booking page. All bookings are final.</p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="band floor" id="inside">
+    <div class="wrap">
+      <h2>Inside the warehouse</h2>
+      <p class="lede">Weather-proof courts, purple floors, and bright lights. Tap a photo to see it bigger.</p>
+
+      <div class="gallery">
+        <button type="button" class="shot big" id="photo0" data-index="0"><img src="images/pickleball-hall.jpg" alt="Row of pickleball courts with nets, seen from one end of the hall" width="896" height="1195" loading="lazy"><span>Pickleball hall</span></button>
+        <button type="button" class="shot" id="photo1" data-index="1"><img src="images/badminton-hall.jpg" alt="Badminton courts beside a green turf strip" width="1600" height="1080" loading="lazy"><span>Badminton courts</span></button>
+        <button type="button" class="shot" id="photo2" data-index="2"><img src="images/court-mural.jpg" alt="Single pickleball court beside a colorful mural wall" width="896" height="1195" loading="lazy"><span>The mural court</span></button>
+      </div>
+
+      <ul class="amen">
+        <li>Free Wi-Fi</li>
+        <li>Shower rooms</li>
+        <li>Food stalls</li>
+        <li>Vending machines</li>
+        <li>Parking</li>
+        <li>Paddle and racket rental</li>
+        <li>Ball machine</li>
+        <li>Instant Replay on Pickleball Courts 1 to 5</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="band visit" id="visit">
+    <div class="wrap venue-grid">
+      <div>
+        <h2>Find us in Parian</h2>
+        <address class="addr">Warehouse 9 &amp; 10, Denson Realty Corp, Parian, Calamba City, Laguna 4027</address>
+        <div class="btn-row">
+          <a class="btn" href="https://www.google.com/maps/search/?api=1&amp;query=6553%2BJP%20Calamba%20Laguna" target="_blank" rel="noopener">Google Maps</a>
+          <a class="btn ghost" href="https://waze.com/ul?ll=14.2090239,121.1543164&amp;navigate=yes" target="_blank" rel="noopener">Waze</a>
+        </div>
+        <p class="contact">Questions or events: message us on <a href="https://www.facebook.com/share/14ZNdzcMT8A/?mibextid=wwXIfr" target="_blank" rel="noopener">Facebook</a> or call <a href="tel:+639088663295">0908 866 3295</a>.</p>
+      </div>
+      <iframe class="map" title="Map to Cross Smash in Parian, Calamba" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=14.2090239,121.1543164&amp;z=16&amp;output=embed"></iframe>
+    </div>
+  </section>
+
+  <section class="band paper" id="faq">
+    <div class="wrap">
+      <h2>Good to know</h2>
+      <label class="search" for="faqSearch">Search questions</label>
+      <input class="search-input" id="faqSearch" type="search" placeholder="Try paddle, refund, or event" autocomplete="off">
+      <div class="faq" id="faqList">
+        <details open>
+          <summary>I've never played. Can I still come?</summary>
+          <p>Yes. The courts welcome beginners and experienced players, and many open play sessions are for all levels. You can rent a paddle or racket at the venue.</p>
+        </details>
+        <details>
+          <summary>Can I come alone?</summary>
+          <p>Yes. Open play is made for this. Register for a session and you'll play with whoever else signed up.</p>
+        </details>
+        <details>
+          <summary>Can I change or cancel a booking?</summary>
+          <p>All court bookings are final, so check your date and time before you pay. Open play sessions have no cancellations, refunds or rescheduling.</p>
+        </details>
+        <details>
+          <summary>How much is paddle or racket rental?</summary>
+          <p>A pickleball paddle is ₱100 and a badminton racket is ₱50. The ball machine is ₱500 an hour.</p>
+        </details>
+        <details>
+          <summary>What does Instant Replay mean on the booking page?</summary>
+          <p>Pickleball Courts 1 to 5 are listed with Instant Replay. Ask the front desk how it works on the day you play.</p>
+        </details>
+        <details>
+          <summary>Can I hold an event or a tournament here?</summary>
+          <p>The venue hosts events. Message the Facebook page with your date, group size and how many courts you need.</p>
+        </details>
+      </div>
+      <p class="no-match" id="faqEmpty" hidden>No matching questions. Message the Facebook page and the team can help.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <p class="tagline">Play. Compete. Have fun. Repeat!</p>
+    <p class="foot-note">Practice website using Cross Smash details and photos from public listings. Schedule and prices can change, so check the booking pages for the latest.</p>
+  </div>
+</footer>
+
+<div class="dock" id="dock">
+  <div><span id="dockLabel">Estimated total</span><b id="dockTotal"></b></div>
+  <a class="btn" href="#sheet">Review plan</a>
+</div>
+
+<dialog id="viewer" aria-label="Photo viewer">
+  <button type="button" class="view-close" id="viewClose" aria-label="Close photo">×</button>
+  <button type="button" class="view-nav prev" id="viewPrev" aria-label="Previous photo">‹</button>
+  <img id="viewImg" src="data:," alt="">
+  <button type="button" class="view-nav next" id="viewNext" aria-label="Next photo">›</button>
+  <p id="viewCap"></p>
+</dialog>
+
+<script src="script.js"></script>
+</body>
+</html>
