@@ -89,7 +89,9 @@
       return wrap(el('textarea', { id, value: value ?? '', required: Boolean(f.required) }), f.hint);
     }
     const shownValue = f.type === 'datetime-local' ? toInput(value) : value ?? '';
-    return wrap(el('input', { id, type: f.type || 'text', value: shownValue, required: Boolean(f.required), min: f.type === 'number' ? 0 : '' }), row && f.newOnly ? null : f.hint);
+    const input = el('input', { id, type: f.type || 'text', value: shownValue, required: Boolean(f.required), min: f.type === 'number' ? 0 : '', autocomplete: f.list ? 'off' : '' });
+    if (f.list) input.setAttribute('list', f.list);
+    return wrap(input, row && f.newOnly ? null : f.hint);
   }
 
   function readFields(fields) {
@@ -140,12 +142,13 @@
       ]
     },
     photos: {
-      label: 'Photos', table: 'photos', folder: 'gallery', order: ['created_at', false], one: 'photo',
-      hint: 'New photos appear in the gallery on the website.',
+      label: 'Photos', table: 'photos', folder: 'gallery', order: ['created_at', false], one: 'photo', groupBy: 'album',
+      hint: 'Photos appear on the website grouped by album.',
       title: r => r.caption || 'Untitled photo',
       detail: r => 'Added ' + showTime(r.created_at),
       thumb: true,
       fields: [
+        { key: 'album', label: 'Album', required: true, list: 'albumNames', hint: 'Choose an existing album or type a new name.' },
         { key: 'image', label: 'Photos', editLabel: 'Replace photo', type: 'image', required: true, multiple: true, hint: `Choose up to ${MAX_BATCH} JPG, PNG or WebP photos. Large photos are resized automatically.` },
         { key: 'caption', label: 'Caption', hint: 'Used for every photo in this upload.', newOnly: true }
       ]
@@ -215,8 +218,7 @@
     if (key !== active) return;
     if (error) { $('panel').replaceChildren(el('p', { class: 'error', textContent: 'Could not load this section: ' + error.message })); return; }
 
-    const items = data.length
-      ? data.map(row => {
+    const card = row => {
         const del = el('button', {
           type: 'button', class: 'danger', textContent: 'Delete',
           onclick: async () => {
@@ -239,13 +241,72 @@
           el('img', { class: 'thumb', alt: '', src: row.image_url || '../images/logo.jpg', loading: 'lazy' }),
           el('div', {}, el('h3', { textContent: s.title(row) }), el('p', { textContent: s.detail(row) }), badge ? el('span', { class: 'pill', textContent: badge }) : null),
           el('div', { class: 'item-tools' }, el('button', { type: 'button', textContent: 'Edit', onclick: () => drawList(row) }), del));
-      })
-      : [el('p', { class: 'empty', textContent: `No ${s.label.toLowerCase()} yet. Add the first one with the form.` })];
+    };
 
+    let items = data.map(card);
+    const groups = new Map();
+    if (s.groupBy) {
+      data.forEach(row => {
+        const name = row[s.groupBy];
+        groups.set(name, [...(groups.get(name) || []), row]);
+      });
+      items = [...groups].map(([name, rows]) => buildGroup(s, name, rows, card));
+    }
+    if (!data.length) items = [el('p', { class: 'empty', textContent: `No ${s.label.toLowerCase()} yet. Add the first one with the form.` })];
+
+    const names = s.groupBy
+      ? el('datalist', { id: 'albumNames' }, ...[...groups.keys()].filter(Boolean).map(name => el('option', { value: name })))
+      : null;
     $('panel').replaceChildren(
       el('div', { class: 'panel-head' }, el('h2', { textContent: s.label })),
       el('p', { class: 'hint', textContent: s.hint }),
-      el('div', { class: 'split' }, el('div', { class: 'items' }, ...items), buildEditor(s, editing)));
+      el('div', { class: 'split' }, el('div', { class: 'items' }, ...items), buildEditor(s, editing)),
+      ...(names ? [names] : []));
+  }
+
+  function buildGroup(s, name, rows, card) {
+    const scoped = query => (name === null ? query.is(s.groupBy, null) : query.eq(s.groupBy, name));
+    const title = el('h3', { textContent: name ?? 'No album' }, el('span', { textContent: rows.length === 1 ? '1 photo' : `${rows.length} photos` }));
+    const head = el('div', { class: 'album-head' });
+
+    const del = el('button', {
+      type: 'button', class: 'danger', textContent: 'Delete album',
+      onclick: async () => {
+        if (!del.classList.contains('armed')) {
+          del.classList.add('armed');
+          del.textContent = `Confirm: delete ${rows.length}`;
+          setTimeout(() => { del.classList.remove('armed'); del.textContent = 'Delete album'; }, 4000);
+          return;
+        }
+        del.disabled = true;
+        const res = await scoped(db.from(s.table).delete());
+        if (res.error) { del.disabled = false; toast('Could not delete: ' + res.error.message, true); return; }
+        await db.storage.from(BUCKET).remove(rows.map(r => r.image_path));
+        toast('Album deleted.');
+        drawList();
+      }
+    });
+
+    const showTitle = () => head.replaceChildren(title, el('button', { type: 'button', textContent: 'Rename', onclick: showRename }), del);
+    function showRename() {
+      const input = el('input', { value: name ?? '', 'aria-label': 'New album name', required: true });
+      const form = el('form', {
+        class: 'album-head',
+        onsubmit: async e => {
+          e.preventDefault();
+          const next = input.value.trim();
+          if (!next) return;
+          const res = await scoped(db.from(s.table).update({ [s.groupBy]: next }));
+          if (res.error) { toast('Could not rename: ' + res.error.message, true); return; }
+          toast('Album renamed.');
+          drawList();
+        }
+      }, input, el('button', { type: 'submit', class: 'primary', textContent: 'Save' }), el('button', { type: 'button', textContent: 'Cancel', onclick: showTitle }));
+      head.replaceChildren(form);
+      input.focus();
+    }
+    showTitle();
+    return el('section', { class: 'album-group' }, head, ...rows.map(card));
   }
 
   // One failed photo should not cost the rest of the batch.
@@ -280,6 +341,8 @@
         const problem = s.check?.(values);
         if (problem) { toast(problem, true); return; }
         const files = s.fields.some(f => f.type === 'image') ? [...$('f-image').files] : [];
+        const groupField = s.fields.find(f => f.key === s.groupBy);
+        if (groupField) groupField.default = values[s.groupBy];
         if (files.length > MAX_BATCH) { toast(`Choose up to ${MAX_BATCH} photos at a time.`, true); return; }
         save.disabled = true;
         if (files.length > 1) { await addMany(s, values, files, save); return; }

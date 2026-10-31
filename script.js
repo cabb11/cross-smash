@@ -659,7 +659,7 @@
   });
 
   /* ---------- Gallery viewer ---------- */
-  const allShots = () => [...document.querySelectorAll('.shot')];
+  const allShots = () => [...document.querySelectorAll('.shot')].filter(s => s.offsetParent !== null);
   let viewing = 0;
   function showPhoto(i) {
     const shots = allShots();
@@ -799,18 +799,51 @@
     }));
   }
 
+  let openAlbum = 'all';
+
+  function showAlbum(name) {
+    openAlbum = name;
+    document.querySelectorAll('#albumChips button').forEach(b => b.setAttribute('aria-pressed', b.dataset.album === name));
+    document.querySelectorAll('#albumSections .album').forEach(s => { s.hidden = name !== 'all' && s.dataset.album !== name; });
+  }
+
   function applyPhotos(rows) {
-    $('moreShots').hidden = !rows.length;
-    $('moreTitle').hidden = !rows.length;
-    $('moreShots').replaceChildren(...rows.map(p => {
-      const button = node('button', 'shot');
-      button.type = 'button';
-      const img = node('img');
-      img.src = p.image_url;
-      img.alt = p.caption || 'Photo from Cross Smash';
-      button.append(img, node('span', '', p.caption || 'Cross Smash'));
-      return button;
+    // Photos arrive newest first, so the album with the latest upload leads.
+    const albums = new Map();
+    rows.forEach(p => {
+      const name = p.album || 'More photos';
+      albums.set(name, [...(albums.get(name) || []), p]);
+    });
+    $('albums').hidden = !rows.length;
+    $('albumSections').replaceChildren(...[...albums].map(([name, photos]) => {
+      const section = node('section', 'album');
+      section.dataset.album = name;
+      const title = node('h4', '', name);
+      title.append(node('span', '', photos.length === 1 ? '1 photo' : `${photos.length} photos`));
+      const grid = node('div', 'gallery more');
+      grid.append(...photos.map(p => {
+        const button = node('button', 'shot');
+        button.type = 'button';
+        const img = node('img');
+        img.src = p.image_url;
+        img.alt = p.caption || `Photo from ${name}`;
+        button.append(img, node('span', '', p.caption || name));
+        return button;
+      }));
+      section.append(title, grid);
+      return section;
     }));
+
+    const chip = (name, label) => {
+      const b = node('button', '', label);
+      b.type = 'button';
+      b.dataset.album = name;
+      b.addEventListener('click', () => showAlbum(name));
+      return b;
+    };
+    $('albumChips').hidden = albums.size < 2;
+    $('albumChips').replaceChildren(chip('all', 'All photos'), ...[...albums.keys()].map(name => chip(name, name)));
+    showAlbum(albums.has(openAlbum) ? openAlbum : 'all');
   }
 
   const SOURCES = [

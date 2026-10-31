@@ -82,6 +82,13 @@ button.danger.armed { background: var(--danger); color: var(--line); }
 .pill { display: inline-block; padding: 0 6px; background: var(--paper-edge); font-size: 13px; font-weight: 700; }
 .item-tools { grid-column: 1 / -1; display: flex; gap: 8px; }
 .item-tools button { min-height: 38px; padding: 4px 12px; font-size: 15px; }
+.album-group { display: grid; gap: 8px; }
+.album-group + .album-group { margin-top: 18px; }
+.album-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.album-head h3 { margin-right: auto; min-width: 0; font: 800 26px/1.1 var(--display); text-transform: uppercase; overflow-wrap: anywhere; }
+.album-head h3 span { margin-left: 6px; color: var(--ink-soft); font: 500 15px var(--body); text-transform: none; }
+.album-head input { flex: 1 1 180px; width: auto; }
+.album-head button { min-height: 38px; padding: 4px 12px; font-size: 15px; }
 .empty { padding: 20px; border: 2px dashed var(--paper-edge); color: var(--ink-soft); }
 
 .editor { display: grid; gap: 14px; min-width: 0; padding: 18px; background: var(--line); border: 1px solid var(--paper-edge); }

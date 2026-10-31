@@ -68,6 +68,8 @@ create table if not exists public.photos (
   created_at timestamptz not null default now()
 );
 
+alter table public.photos add column if not exists album text;
+
 alter table public.admins enable row level security;
 alter table public.site_settings enable row level security;
 alter table public.sessions enable row level security;

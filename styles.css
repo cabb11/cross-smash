@@ -416,7 +416,14 @@ dialog::backdrop { background: var(--deep); }
 .event h3 { font: 800 30px/1.05 var(--display); text-transform: uppercase; overflow-wrap: anywhere; }
 .event p { color: var(--on-dark-soft); white-space: pre-line; overflow-wrap: anywhere; }
 .event .btn { margin-top: 8px; }
-.more-title { margin-top: 34px; font: 800 30px/1.1 var(--display); text-transform: uppercase; }
+.more-title { margin-top: 34px; font: 800 34px/1.1 var(--display); text-transform: uppercase; }
+.chips-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.chips-row button { min-height: 42px; padding: 6px 14px; border: 2px solid var(--on-dark-soft); background: transparent; font-weight: 600; }
+.chips-row button:hover { border-color: var(--accent); }
+.chips-row button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: var(--deep); }
+.album { margin-top: 22px; }
+.album h4 { margin: 0; font: 800 24px/1.1 var(--display); text-transform: uppercase; overflow-wrap: anywhere; }
+.album h4 span { margin-left: 8px; color: var(--on-dark-soft); font: 500 15px var(--body); text-transform: none; }
 .gallery.more { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); grid-template-rows: none; grid-auto-rows: 200px; margin-top: 12px; }
 .hours { margin-bottom: 18px; color: var(--on-dark-soft); font-weight: 600; }
 .foot-note a { color: inherit; }
